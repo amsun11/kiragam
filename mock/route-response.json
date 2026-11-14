@@ -1,0 +1,62 @@
+{
+  "region_id": "gale",
+  "request": {
+    "start": { "lon": 137.44, "lat": -4.59 },
+    "end": { "lon": 137.40, "lat": -4.70 },
+    "max_slope_deg": 25,
+    "storm_level": 0
+  },
+  "path": [
+    { "lon": 137.440, "lat": -4.590, "height_m": -4500.0 },
+    { "lon": 137.436, "lat": -4.605, "height_m": -4498.5 },
+    { "lon": 137.431, "lat": -4.620, "height_m": -4492.0 },
+    { "lon": 137.425, "lat": -4.636, "height_m": -4481.3 },
+    { "lon": 137.419, "lat": -4.652, "height_m": -4470.8 },
+    { "lon": 137.413, "lat": -4.668, "height_m": -4462.1 },
+    { "lon": 137.407, "lat": -4.684, "height_m": -4455.4 },
+    { "lon": 137.400, "lat": -4.700, "height_m": -4449.9 }
+  ],
+  "stats": {
+    "distance_m": 7000.0,
+    "max_slope_deg": 11.8,
+    "mean_slope_deg": 4.6,
+    "est_time_hours": 70.0
+  },
+  "risk": {
+    "overall_score": 30,
+    "level": "moderate",
+    "factors": [
+      {
+        "id": "slope",
+        "label": "Slope",
+        "score": 28,
+        "weight": 0.5,
+        "kind": "measured",
+        "description": "Based on the steepest and average slope along the route."
+      },
+      {
+        "id": "roughness",
+        "label": "Terrain roughness",
+        "score": 41,
+        "weight": 0.3,
+        "kind": "measured",
+        "description": "Local elevation variation along the route."
+      },
+      {
+        "id": "dust",
+        "label": "Dust storm scenario",
+        "score": 20,
+        "weight": 0.2,
+        "kind": "scenario",
+        "description": "Set by the storm level chosen by the user, not a forecast."
+      }
+    ],
+    "advisory": {
+      "recommendation": "go",
+      "message": "Route stays below the slope limit. Moderate roughness in the middle section; plan a check-in there."
+    }
+  },
+  "meta": {
+    "mock": true
+  }
+}

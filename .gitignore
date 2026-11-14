@@ -1,0 +1,35 @@
+# Secrets
+.env
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Node (if you use any build tools)
+node_modules/
+dist/
+
+# Big raw data (keep small cropped files in data/crop/ instead)
+data/raw/
+*.tif
+*.tiff
+*.img
+*.jp2
+!data/crop/*.tif
+!data/crop/*.tiff
+
+# Generated output
+output/
+*.mp4
+*.mov
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+frontend/config.js
