@@ -4,3 +4,6 @@ html, body { margin: 0; height: 100%; font-family: sans-serif; }
     background: rgba(20,20,20,0.85); color: #fff; padding: 10px; border-radius: 6px; font-size: 14px; }
 #panel button { margin: 0 4px 6px 0; }
 #stats { margin-top: 6px; white-space: pre-line; }
+#credits { position: absolute; bottom: 38px; left: 10px; z-index: 10; max-width: 420px;
+  background: rgba(20,20,20,0.7); color: #ddd; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+#credits a { color: #9ecbff; text-decoration: underline; }
