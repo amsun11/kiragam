@@ -62,7 +62,7 @@ def build_settings(cell_size, cost):
     if not finite.any():
         raise ValueError("Cost grid has no usable cells")
 
-    min_cost = float(cost[finite].min())          # cheapest cost per meter anywhere in the grid
+    min_cost = float(cost[finite].min())          
     if min_cost <= 0:
         raise ValueError(f"Costs must be positive, but the minimum is {min_cost}")
 
@@ -79,6 +79,7 @@ def step_cost(cost, from_cell, to_cell, length):
     return length*(cost[row_one, col_one] + cost[row_two, col_two]) / 2.0
 
 def heuristic(curr_cell, goal_cell, settings):
+    
     g_row, g_col = goal_cell
     c_row, c_col = curr_cell
 
