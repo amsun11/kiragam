@@ -1,0 +1,10 @@
+name: gale
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - rasterio        # reads the GeoTIFFs; conda ships GDAL with it, so nothing to compile
+  - fastapi
+  - uvicorn         # runs the API
+  # - matplotlib    # optional: only needed for plotting routes while debugging

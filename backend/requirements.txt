@@ -1,0 +1,9 @@
+numpy
+rasterio
+fastapi
+uvicorn
+# pydantic is installed automatically with fastapi
+# matplotlib   # optional: only for plotting routes while debugging
+#
+# Note: rasterio can fail to build with pip on very new Python versions (it needs
+# GDAL). Tested with Python 3.12 -- use environment.yml with conda if pip fails.
