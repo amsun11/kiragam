@@ -23,7 +23,6 @@ def get_route(start_lat, start_lon, end_lat, end_lon):
     start = (s_x, s_y)
     end = (e_x, e_y)
 
-    #Create array with all the valid value
 
     #Get cost array
 
