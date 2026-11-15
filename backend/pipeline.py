@@ -3,14 +3,25 @@ import coords
 from route import find_path, build_settings, calculate_stats
 from cost import Cost
 
+_cache = {}
+
+def _load():
+    if not _cache:
+        dem = Grid_Utils("dem")
+        slope = Grid_Utils("slope")
+        dem.check_same_values(slope)
+        cost = Cost().slope_function(dem, slope)
+        cell_width, _ = dem.get_cell_size()
+        _cache.update(dem=dem, slope=slope, cost=cost,
+                      settings=build_settings(abs(cell_width), cost))
+    return _cache
 
 def get_route(start_lat, start_lon, end_lat, end_lon):
 
-
-    dem = Grid_Utils("dem")
-    slope = Grid_Utils("slope")
-
-    dem.check_same_values(slope)        
+    c = _load()
+    #Get Files
+    dem = c["dem"]
+    slope = c["slope"]
 
     #Compute latitude/longitude into meters
     s_x,s_y = coords.longlat_to_xy(start_lon, start_lat)
@@ -18,7 +29,6 @@ def get_route(start_lat, start_lon, end_lat, end_lon):
     #Computer meters to array
     s_x, s_y = dem.map_to_array(s_x, s_y)
     e_x, e_y = dem.map_to_array(e_x, e_y)
-    #get the files
     
     start = (s_x, s_y)
     end = (e_x, e_y)
@@ -26,16 +36,11 @@ def get_route(start_lat, start_lon, end_lat, end_lon):
 
     #Get cost array
 
-    cost = Cost()
-    cost_of_slopes = cost.slope_function(dem, slope)
+    cost_of_slopes = c["cost"]
 
     cell_width, cell_height = dem.get_cell_size()
 
-    settings = build_settings(
-        abs(cell_width),
-        cost_of_slopes
-    )
-
+    settings = c["settings"]
     path, best_cost, steps, cells_explored = find_path(cost_of_slopes, start, end, settings)
     #print("path: ", path)
     #convert array to meters
