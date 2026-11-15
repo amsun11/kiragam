@@ -1,5 +1,5 @@
 window.APP_CONFIG = {
-  BACKEND_URL: "",
+  BACKEND_URL: "http://localhost:8000",
   USE_MOCK: false,
   MOCK_FILE: "",
   CREDITS: [
