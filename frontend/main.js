@@ -105,7 +105,36 @@ const START_VIEW = Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS);
 const statusEl = document.getElementById("status");
 const statsEl = document.getElementById("stats");
 const findBtn = document.getElementById("findBtn");
-const setStatus = (msg) => { statusEl.textContent = msg; };
+const setStatus = (msg, isError = false) => {
+  statusEl.textContent = msg;
+  statusEl.classList.toggle("error", isError);
+};
+
+// turns number into text
+const fmt = (v, digits = 1) => (Number.isFinite(v) ? v.toFixed(digits) : "n/a");
+
+function clearRoute() {
+  if (routeEntity) { viewer.entities.remove(routeEntity); routeEntity = null; }
+  statsEl.innerText = "";
+}
+
+function validateRoute(data) {
+  const ok = data && Array.isArray(data.path) && data.path.length >= 2 &&
+    data.path.every((p) => Number.isFinite(p.lon) && Number.isFinite(p.lat));
+  if (!ok) throw Object.assign(new Error("The route data was incomplete."), { code: "bad_response" });
+}
+
+// error handling messaging to the user
+function friendlyError(err) {
+  if (err.code === "no_route") return "No route found. Try different points or a higher slope limit.";
+  if (err.code === "out_of_region") return "That point is outside the routing area. Pick points inside the white box.";
+  if (err.code === "invalid_point") return "One of the points can't be used for routing. Try moving it a little.";
+  if (err.code === "bad_response") return err.message;
+  if (err.name === "TimeoutError") return "The route service took too long. Try again.";
+  if (err.name === "SyntaxError") return "The route service sent an unreadable response.";
+  if (err instanceof TypeError) return "Can't reach the route service. Check that the backend is running.";
+  return "Something went wrong: " + err.message;
+}
 
 /* 
     start: starting coordinates, connects to backend
@@ -154,6 +183,17 @@ function clearAll() {
   setStatus("Click inside the white box to set a start point.");
 }
 
+// Demo - uses pre-set points to show
+function placePoints(a, b) {
+  clearAll();
+  if (!inRegion(a) || !inRegion(b)) { setStatus("Demo points are outside the region."); return; }
+  start = a; startMarker = addMarker(a, Cesium.Color.LIME);
+  end = b;   endMarker = addMarker(b, Cesium.Color.RED);
+  findBtn.disabled = false;
+  setStatus("Press Find route.");
+}
+document.getElementById("demoBtn").onclick = () => placePoints(DEMO.start, DEMO.end);
+
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 handler.setInputAction((click) => {
   const cart = viewer.camera.pickEllipsoid(click.position, MARS);
@@ -185,20 +225,27 @@ function fakePath(a, b, n) {
 }
 
 async function requestRoute() {
-  if (cfg.USE_MOCK) {
-    const res = await fetch("../mock/route-response.json", { signal: AbortSignal.timeout(10000) });
-    const data = await res.json();
-    data.path = fakePath(start, end, 40);
-    return data;
+  const opts = { signal: AbortSignal.timeout(10000) };
+  // if mock data
+  const res = cfg.USE_MOCK
+    ? await fetch("../mock/" + (cfg.MOCK_FILE || "route-response.json"), opts)
+    // if backend
+    : await fetch(cfg.BACKEND_URL + "/api/route", {
+        ...opts,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ region_id: "gale", start, end, max_slope_deg: 20 })
+      });
+
+  const data = await res.json();                 // throws SyntaxError if not JSON
+  if (data.error || !res.ok) {
+    throw Object.assign(new Error(data.message || data.detail || "Route request failed"), { code: data.error });
   }
-  const res = await fetch(cfg.BACKEND_URL + "/api/route", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ region_id: "gale", start, end, max_slope_deg: 25 }),
-    signal: AbortSignal.timeout(10000)
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || data.detail || "Route request failed");
+  if (cfg.USE_MOCK) {
+    if (!cfg.MOCK_FILE) data.path = fakePath(start, end, 40);   // follow the clicked points
+    data.meta = { ...(data.meta || {}), mock: true };
+  }
+  validateRoute(data);
   return data;
 }
 
@@ -220,10 +267,10 @@ function drawRoute(data) {
 function showStats(data) {
   const s = data.stats;
   statsEl.innerText = [
-    `Distance: ${(s.distance_m / 1000).toFixed(1)} km`,
-    `Max slope: ${s.max_slope_deg.toFixed(1)}°`,
-    `Mean slope: ${s.mean_slope_deg.toFixed(1)}°`,
-    `Est. time: ${s.est_time_hours.toFixed(0)} h`,
+    `Distance: ${fmt((s.distance_m / 1000).toFixed(1))} km`,
+    `Max slope: ${fmt(s.max_slope_deg.toFixed(1))}°`,
+    `Mean slope: ${fmt(s.mean_slope_deg.toFixed(1))}°`,
+    `Est. time: ${fmt(s.est_time_hours.toFixed(0))} h`,
     data.meta && data.meta.mock ? "(demo data)" : ""
   ].join("\n");
 }
@@ -231,6 +278,7 @@ function showStats(data) {
 // Buttons
 findBtn.addEventListener("click", async () => {
   findBtn.disabled = true;
+  clearRoute()
   setStatus("Finding route…");
   try {
     const data = await requestRoute();
@@ -238,9 +286,10 @@ findBtn.addEventListener("click", async () => {
     showStats(data);
     setStatus("Route found.");
   } catch (err) {
-    setStatus("Could not get a route: " + err.message);
+    setStatus(friendlyError(err), true);
   } finally {
-    findBtn.disabled = false;
+    // enable/disable find route btn based on whether both points still exist
+    findBtn.disabled = !(start && end);
   }
 });
 document.getElementById("clearBtn").onclick = clearAll;
