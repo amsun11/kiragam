@@ -31,7 +31,7 @@ class Cost:
     def slope_function(self, dem, slope):
         mask = self.cost_mask(dem, slope)
         cost_array = np.full(slope.data.shape, np.inf, dtype=float)
-        cost_array[mask] = 1 + slope.data[mask] * config.SLOPE_PENALTY
+        cost_array[mask] = config.BASE_COST + slope.data[mask] * config.SLOPE_PENALTY
 
         return cost_array
     
