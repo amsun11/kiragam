@@ -8,11 +8,11 @@ DIAGONAL_MOVES = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 
 
 def neighbors(cost, row, col, settings):
-    # settings is a dict: {"cell_size": 5.0, "allow_diagonal": True, "prevent_corner_cutting": True}
+    
     if not usable(cost, row, col):
-        return []                      # a blocked start cell has no neighbors
+        return []                      
 
-    x, y = cost.shape                  # x = number of rows, y = number of columns
+    x, y = cost.shape                  
     cell_size = settings["cell_size"]
     valid_neighbors = []
 
@@ -20,7 +20,7 @@ def neighbors(cost, row, col, settings):
         new_row = row + i[0]
         new_col = col + i[1]
 
-        # Off the grid: skip this move (don't raise)
+        
         if new_row < 0 or new_row >= x:
             continue
         if new_col < 0 or new_col >= y:
@@ -43,9 +43,9 @@ def neighbors(cost, row, col, settings):
             if not usable(cost, new_row, new_col):
                 continue
 
-            # Corner cutting: the two cells the diagonal squeezes between
+            
             if settings["prevent_corner_cutting"]:
-                if not usable(cost, new_row, col) or not usable(cost, row, new_col):
+                if not usable(cost, new_row, col) or not usable(cost, row, new_col):  #Used Claude AI to come up with block to prevent cutting corners
                     continue
 
             valid_neighbors.append((new_row, new_col, step_length))
@@ -56,7 +56,7 @@ def neighbors(cost, row, col, settings):
 def usable(cost, row, col):
     return math.isfinite(cost[row, col])
 
-
+#Claude AI came up with this method to help with metadata 
 def build_settings(cell_size, cost):
     finite = np.isfinite(cost)
     if not finite.any():
@@ -79,7 +79,7 @@ def step_cost(cost, from_cell, to_cell, length):
     return length*(cost[row_one, col_one] + cost[row_two, col_two]) / 2.0
 
 def heuristic(curr_cell, goal_cell, settings):
-    
+
     g_row, g_col = goal_cell
     c_row, c_col = curr_cell
 
@@ -91,7 +91,7 @@ def heuristic(curr_cell, goal_cell, settings):
         diagonal = min(row_dist, col_dist)
         straight = max(row_dist, col_dist) - diagonal
         total_dist = diagonal * cell_size * math.sqrt(2) + straight*cell_size
-
+        #Claude came up with a more time-sensitive way to get the total_dist then I had
     else:
         total_dist = (row_dist + col_dist) * cell_size
     
@@ -100,10 +100,10 @@ def heuristic(curr_cell, goal_cell, settings):
 
 def reconstruct(parent_row, parent_col, start, goal):
 
-    start = tuple(start)                  # so the comparison below works for lists too
+    start = tuple(start)                  
     row, col = goal
     path = [(row, col)]
-    max_steps = parent_row.size           # a path can't be longer than the grid
+    max_steps = parent_row.size           
 
     while (row, col) != start:
         if len(path) > max_steps:
@@ -113,7 +113,7 @@ def reconstruct(parent_row, parent_col, start, goal):
         p_col = int(parent_col[row, col])
 
         if p_row == -1 or p_col == -1:
-            raise ValueError(f"Broken parent chain at cell {(row, col)}")
+            raise ValueError(f"Broken parent chain at cell {(row, col)}") 
 
         row, col = p_row, p_col
         path.append((row, col))
@@ -128,6 +128,7 @@ def find_path(cost, start, goal, settings):
     g_row, g_col = goal
     n_rows, n_cols = cost.shape
 
+    #Claude AI came up with these error checks
     if not (0 <= s_row < n_rows and 0 <= s_col < n_cols):
         raise ValueError(f"Starting point {start} is out of range for a grid of shape {cost.shape}")
     if not (0 <= g_row < n_rows and 0 <= g_col < n_cols):
@@ -141,14 +142,14 @@ def find_path(cost, start, goal, settings):
     if start == goal:
         return ([start], 0.0, 0, 0)
 
-    best_cost = np.full(cost.shape, np.inf)          # cheapest known cost to reach each cell
+    best_cost = np.full(cost.shape, np.inf)         
     best_cost[s_row, s_col] = 0.0
     parent_row = np.full(cost.shape, -1, dtype=np.int32)
     parent_col = np.full(cost.shape, -1, dtype=np.int32)
-    processed = np.zeros(cost.shape, dtype=bool)     # cells already expanded
+    processed = np.zeros(cost.shape, dtype=bool)     
 
     tie_breaker = 0
-    cells = []                                       # the heap: (priority, tie, row, col)
+    cells = []                                      
     heapq.heappush(cells, (heuristic(start, goal, settings), tie_breaker, s_row, s_col))
 
     cells_explored = 0
@@ -157,7 +158,7 @@ def find_path(cost, start, goal, settings):
     while cells:
         priority, tie, curr_row, curr_col = heapq.heappop(cells)
 
-        if processed[curr_row, curr_col]:            # stale entry, a cheaper one was handled earlier
+        if processed[curr_row, curr_col]:            
             continue
         processed[curr_row, curr_col] = True
         cells_explored += 1
@@ -173,7 +174,7 @@ def find_path(cost, start, goal, settings):
             new_cost = best_cost[curr_row, curr_col] + step_cost(
                 cost, (curr_row, curr_col), (r, c), step_length)
 
-            if new_cost < best_cost[r, c]:           # found a cheaper way to (r, c)
+            if new_cost < best_cost[r, c]:           
                 best_cost[r, c] = new_cost
                 parent_row[r, c] = curr_row
                 parent_col[r, c] = curr_col

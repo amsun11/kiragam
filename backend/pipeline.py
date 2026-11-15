@@ -5,6 +5,7 @@ from cost import Cost
 
 _cache = {}
 
+#Claude came up with this function to help with memory usage
 def _load():
     if not _cache:
         dem = Grid_Utils("dem")

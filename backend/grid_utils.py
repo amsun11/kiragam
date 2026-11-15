@@ -3,6 +3,7 @@ import numpy as np
 import config 
 import math
 
+
 class Grid_Utils:
 
     def __init__(self, file):
@@ -80,10 +81,9 @@ class Grid_Utils:
         return [row, col]
 
     def cell_in_bounds(self, row, col):
-        """True if (row, col) is a valid index into the array.
-        Raises TypeError if row or col isn't an integer."""
+        
         for name, v in (("row", row), ("col", col)):
-            if isinstance(v, bool) or not isinstance(v, (int, np.integer)):
+            if isinstance(v, bool) or not isinstance(v, (int, np.integer)):  #Used Claude to get this error check statement
                 raise TypeError(f"{name} must be an int, got {v!r} ({type(v).__name__})")
 
         n_rows, n_cols = self.shape  # shape is [height, width]
@@ -91,15 +91,12 @@ class Grid_Utils:
 
 
     def map_in_bounds(self, x, y):
-        """True if the map point (x, y), in meters, falls inside the grid.
-        Left and top edges count as inside, right and bottom edges don't
-        (same convention as map_to_array's floor).
-        Raises TypeError if x or y isn't a number."""
+        
         for name, v in (("x", x), ("y", y)):
-            if isinstance(v, bool) or not isinstance(v, (int, float, np.integer, np.floating)):
+            if isinstance(v, bool) or not isinstance(v, (int, float, np.integer, np.floating)): #Used Claude to get this error check statement
                 raise TypeError(f"{name} must be a number, got {v!r} ({type(v).__name__})")
 
-        if not (math.isfinite(x) and math.isfinite(y)):  # catches NaN and infinity
+        if not (math.isfinite(x) and math.isfinite(y)):  
             return False
 
         col = math.floor((x - self.transform.c) / self.transform.a)
@@ -134,7 +131,7 @@ class Grid_Utils:
         arr = np.isfinite(self.data)
 
         if self.no_data is not None and np.isfinite(self.no_data):
-            arr &= (self.data != self.no_data)
+            arr &= (self.data != self.no_data) #Used Claude to do this mask
 
 
         return arr
