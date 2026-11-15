@@ -10,7 +10,9 @@ const viewer = new Cesium.Viewer("map", {
   baseLayerPicker: false,
   geocoder: false,          // both need Cesium's online service/token
   skyAtmosphere: false,
-  moon: false
+  moon: false,
+  animation: false,
+  timeline: false
 });
 console.log("Cesium version:", Cesium.VERSION);
 
@@ -105,6 +107,7 @@ const START_VIEW = Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS);
 const statusEl = document.getElementById("status");
 const statsEl = document.getElementById("stats");
 const findBtn = document.getElementById("findBtn");
+const DEMO = { start: { lon: 137.44, lat: -4.59 }, end: { lon: 137.40, lat: -4.70 } };
 const setStatus = (msg, isError = false) => {
   statusEl.textContent = msg;
   statusEl.classList.toggle("error", isError);
@@ -265,15 +268,38 @@ function drawRoute(data) {
 
 // read data from route given from backend and display stats
 function showStats(data) {
+  console.log("stats:", data.stats, typeof (data.stats && data.stats.distance_m));
   const s = data.stats;
   statsEl.innerText = [
-    `Distance: ${fmt((s.distance_m / 1000).toFixed(1))} km`,
-    `Max slope: ${fmt(s.max_slope_deg.toFixed(1))}°`,
-    `Mean slope: ${fmt(s.mean_slope_deg.toFixed(1))}°`,
-    `Est. time: ${fmt(s.est_time_hours.toFixed(0))} h`,
+    `Distance: ${fmt(s.distance_m / 1000)} km`,
+    `Max slope: ${fmt(s.max_slope_deg)}°`,
+    `Mean slope: ${fmt(s.mean_slope_deg)}°`,
+    `Est. time: ${fmt(s.est_time_hours)} h`,
     data.meta && data.meta.mock ? "(demo data)" : ""
   ].join("\n");
 }
+
+// Create credits/attributions to be displayed
+const creditsEl = document.getElementById("credits");
+
+function renderCredits(items) {
+ creditsEl.replaceChildren();
+  if (!Array.isArray(items)) { creditsEl.textContent = items || ""; return; }   // old string format still works
+  items.forEach((item, i) => {
+    if (i > 0) creditsEl.append(" · ");
+    if (item.url) {
+      const a = document.createElement("a");
+      a.href = item.url;
+      a.textContent = item.text;
+      a.target = "_blank";                  // open in a new tab
+      a.rel = "noopener noreferrer";        // standard safety for links that open new tabs
+      creditsEl.append(a);
+    } else {
+      creditsEl.append(item.text);
+    }
+  });
+}
+renderCredits(cfg.CREDITS);
 
 // Buttons
 findBtn.addEventListener("click", async () => {
