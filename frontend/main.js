@@ -307,7 +307,8 @@ renderCredits(cfg.CREDITS);
 findBtn.addEventListener("click", async () => {
   findBtn.disabled = true;
   clearRoute()
-  setStatus("Finding route…");
+  setStatus("Finding route...")
+  const slowTimer = setTimeout(() => setStatus("Still working... the route service may be waking up."), 5000);
   try {
     const data = await requestRoute();
     drawRoute(data);
@@ -318,6 +319,7 @@ findBtn.addEventListener("click", async () => {
   } finally {
     // enable/disable find route btn based on whether both points still exist
     findBtn.disabled = !(start && end);
+    clearTimeout(slowTimer)
   }
 });
 document.getElementById("clearBtn").onclick = clearAll;
