@@ -3,6 +3,8 @@ const MARS = Cesium.Ellipsoid.MARS ?? new Cesium.Ellipsoid(3396190, 3396190, 339
 Cesium.Ellipsoid.default = MARS;
 console.log(MARS)
 
+const ROUTE_H = 10;   // meters above the surface, used for markers and route
+
 // Set viewer settings to not default to Earth
 const viewer = new Cesium.Viewer("map", {
   baseLayer: false,        // skip the default Earth imagery
@@ -173,7 +175,7 @@ function inRegion(point) {   // point = { lon, lat } in degrees
 // Markers and clicks
 function addMarker(pt, color) {
     return viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(pt.lon, pt.lat, 0, MARS),
+        position: Cesium.Cartesian3.fromDegrees(pt.lon, pt.lat, ROUTE_H, MARS),
         point: { pixelSize: 12, color, outlineColor: Cesium.Color.WHITE, outlineWidth: 2,
             disableDepthTestDistance: Number.POSITIVE_INFINITY 
         }
@@ -247,12 +249,15 @@ async function requestRoute() {
 function drawRoute(data) {
   if (routeEntity) viewer.entities.remove(routeEntity);
   // fixed 50 m height: the globe has no terrain yet, so real heights would sit underground
-  const flat = data.path.flatMap((pt) => [pt.lon, pt.lat, 50]);
+  const flat = data.path.flatMap((pt) => [pt.lon, pt.lat, ROUTE_H]);
   routeEntity = viewer.entities.add({
     // draw cyan line as route
     polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(flat, MARS),
                 width: 4, material: Cesium.Color.CYAN }
   });
+  const first = data.path[0], last = data.path[data.path.length - 1];
+  if (startMarker) startMarker.position = Cesium.Cartesian3.fromDegrees(first.lon, first.lat, ROUTE_H, MARS);
+  if (endMarker) endMarker.position = Cesium.Cartesian3.fromDegrees(last.lon, last.lat, ROUTE_H, MARS);
   // moves camera through route
   viewer.flyTo(routeEntity, { duration: 1.5 });
 }
