@@ -15,8 +15,7 @@ dist/
 
 # Big raw data (keep small cropped files in data/crop/ instead)
 data/raw/
-*.tif
-*.tiff
+
 *.img
 *.jp2
 !data/crop/*.tif
