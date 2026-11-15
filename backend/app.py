@@ -6,10 +6,14 @@ from pipeline import get_route
 
 app = FastAPI()
 
+allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?", # include any local server
+
 app.add_middleware(
     CORSMiddleware,
-    # allow_origin = live host server
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?", # include any local server
+    allow_origins=[
+        "https://kiragam-frontend.onrender.com",
+    ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
