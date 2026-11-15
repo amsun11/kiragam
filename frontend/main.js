@@ -268,8 +268,8 @@ function drawRoute(data) {
 
 // read data from route given from backend and display stats
 function showStats(data) {
-  console.log("stats:", data.stats, typeof (data.stats && data.stats.distance_m));
-  const s = data.stats;
+  // doesn't crash sim if there is no stats sent from backend
+  const s = data.stats || {};
   statsEl.innerText = [
     `Distance: ${fmt(s.distance_m / 1000)} km`,
     `Max slope: ${fmt(s.max_slope_deg)}°`,
