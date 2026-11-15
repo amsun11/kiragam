@@ -12,3 +12,9 @@ ALLOW_DIAGONAL = True
 PREVENT_CORNER_CUTTING = True
 
 
+#value marking cells with no data
+DEM_NO_DATA_VAL = -32767
+SLOPE_NO_DATA_VAL = -9999
+
+#Radius measurement in meters
+MARS_RADIUS_M = 3396190.0
