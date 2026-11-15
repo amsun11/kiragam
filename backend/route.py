@@ -120,6 +120,78 @@ def reconstruct(parent_row, parent_col, start, goal):
     path.reverse()
     return path
 
+def find_path(cost, start, goal, settings):
+    start = (int(start[0]), int(start[1]))
+    goal = (int(goal[0]), int(goal[1]))
+    s_row, s_col = start
+    g_row, g_col = goal
+    n_rows, n_cols = cost.shape
+
+    if not (0 <= s_row < n_rows and 0 <= s_col < n_cols):
+        raise ValueError(f"Starting point {start} is out of range for a grid of shape {cost.shape}")
+    if not (0 <= g_row < n_rows and 0 <= g_col < n_cols):
+        raise ValueError(f"Ending point {goal} is out of range for a grid of shape {cost.shape}")
+
+    if not usable(cost, s_row, s_col):
+        raise ValueError(f"Starting point {start} is blocked")
+    if not usable(cost, g_row, g_col):
+        raise ValueError(f"Ending point {goal} is blocked")
+
+    if start == goal:
+        return ([start], 0.0, 0)
+
+    best_cost = np.full(cost.shape, np.inf)          # cheapest known cost to reach each cell
+    best_cost[s_row, s_col] = 0.0
+    parent_row = np.full(cost.shape, -1, dtype=np.int32)
+    parent_col = np.full(cost.shape, -1, dtype=np.int32)
+    processed = np.zeros(cost.shape, dtype=bool)     # cells already expanded
+
+    tie_breaker = 0
+    cells = []                                       # the heap: (priority, tie, row, col)
+    heapq.heappush(cells, (heuristic(start, goal, settings), tie_breaker, s_row, s_col))
+
+    cells_explored = 0
+    found = False
+
+    while cells:
+        priority, tie, curr_row, curr_col = heapq.heappop(cells)
+
+        if processed[curr_row, curr_col]:            # stale entry, a cheaper one was handled earlier
+            continue
+        processed[curr_row, curr_col] = True
+        cells_explored += 1
+
+        if (curr_row, curr_col) == goal:
+            found = True
+            break
+
+        for r, c, step_length in neighbors(cost, curr_row, curr_col, settings):
+            if processed[r, c]:
+                continue
+
+            new_cost = best_cost[curr_row, curr_col] + step_cost(
+                cost, (curr_row, curr_col), (r, c), step_length)
+
+            if new_cost < best_cost[r, c]:           # found a cheaper way to (r, c)
+                best_cost[r, c] = new_cost
+                parent_row[r, c] = curr_row
+                parent_col[r, c] = curr_col
+                tie_breaker += 1
+                heapq.heappush(cells, (new_cost + heuristic((r, c), goal, settings),
+                                       tie_breaker, r, c))
+
+    if not found:
+        raise ValueError(f"No route from {start} to {goal} (explored {cells_explored} cells)")
+
+    path = reconstruct(parent_row, parent_col, start, goal)
+    return (path, float(best_cost[g_row, g_col]), len(path) - 1)
+
+        
+
+
+
+    
+
 
            
 
