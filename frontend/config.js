@@ -1,5 +1,10 @@
 window.APP_CONFIG = {
-  BACKEND_URL: "https://kiragam.onrender.com",
+  BACKEND_URL: (
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1"
+    )
+    ? "http://localhost:8000"
+    : "https://kiragam.onrender.com",
   USE_MOCK: false,
   MOCK_FILE: "",
   CREDITS: [
