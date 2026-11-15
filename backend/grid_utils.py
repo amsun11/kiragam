@@ -140,20 +140,3 @@ class Grid_Utils:
         return arr
      
 
-if __name__ == "__main__":
-    slope = Grid_Utils("slope")
-    dem = Grid_Utils("DEM")
-    matches = slope.check_same_values(dem)
-    slope_val = slope.get_slope(78,500)
-    m = dem.valid_mask()
-    print(m.shape == dem.data.shape, m.dtype)
-    print("invalid:", (~m).sum(), "of", m.size)
-    print(slope_val)
-    x, y = slope.array_to_map(78, 500)
-    print("x: ", x , "y: ", y)
-    row, col = slope.map_to_array(8149782, -271139)
-    print("row: ", row , "col: ", col)
-    slope_two = slope.get_slope(row, col)
-    print(slope_two)
-
-    
