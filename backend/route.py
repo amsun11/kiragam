@@ -138,7 +138,7 @@ def find_path(cost, start, goal, settings):
         raise ValueError(f"Ending point {goal} is blocked")
 
     if start == goal:
-        return ([start], 0.0, 0)
+        return ([start], 0.0, 0, 0)
 
     best_cost = np.full(cost.shape, np.inf)          # cheapest known cost to reach each cell
     best_cost[s_row, s_col] = 0.0
@@ -184,30 +184,36 @@ def find_path(cost, start, goal, settings):
         raise ValueError(f"No route from {start} to {goal} (explored {cells_explored} cells)")
 
     path = reconstruct(parent_row, parent_col, start, goal)
-    return (path, float(best_cost[g_row, g_col]), len(path) - 1)
+    return (path, float(best_cost[g_row, g_col]), len(path) - 1, cells_explored)
 
+
+def calculate_stats(path, slope, speed=config.ASTRONAUT_SPEED_MPS):
+    if not path:
+        raise ValueError("Cannot calculate stats for an empty path")
+
+    total_distance = 0.0
+
+    for i in range(len(path) - 1):
+        row1, col1 = path[i]
+        row2, col2 = path[i + 1]
+
+        x1, y1 = slope.array_to_map(row1, col1)
+        x2, y2 = slope.array_to_map(row2, col2)
+
+        total_distance += math.hypot(x2 - x1, y2 - y1)
+
+    slopes = [slope.get_slope(row, col) for row, col in path]
+
+    max_slope = max(slopes)
+    mean_slope = float(np.mean(slopes))
+
+    time_hours = total_distance / speed / 3600
+
+    return {
+        "distance_m": total_distance,
+        "max_slope_deg": max_slope,
+        "mean_slope_deg": mean_slope,
+        "est_time_hours": time_hours
+    }
         
 
-
-
-    
-
-
-           
-
-
-
-parent_row = np.full((3, 4), -1, dtype=np.int32)
-parent_col = np.full((3, 4), -1, dtype=np.int32)
-
-parent_row[0, 1], parent_col[0, 1] = 0, 0     # (0,1) came from (0,0)
-parent_row[1, 2], parent_col[1, 2] = 0, 1     # (1,2) came from (0,1)
-parent_row[2, 3], parent_col[2, 3] = 1, 2     # (2,3) came from (1,2)
-
-print(reconstruct(parent_row, parent_col, (0, 0), (2, 3)))   # [(0,0), (0,1), (1,2), (2,3)]
-print(reconstruct(parent_row, parent_col, (0, 0), (0, 0)))   # [(0,0)]
-
-try:
-    reconstruct(parent_row, parent_col, (0, 0), (2, 0))      # (2,0) has no parent
-except ValueError as e:
-    print(e)                                                 # Broken parent chain at cell (2, 0)
