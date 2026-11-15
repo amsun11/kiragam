@@ -1,7 +1,10 @@
-#Files - slope map and elevation map of extent
-FIVE_SLOPE_FILE = "../data/gale_slope_5m.tif"
-FIVE_DEM_FILE = "../data/gale_crop_5m.tif"
+from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+#Files - slope map and elevation map of extent
+FIVE_SLOPE_FILE = PROJECT_ROOT / "data" / "gale_slope_5m.tif"
+FIVE_DEM_FILE = PROJECT_ROOT / "data" / "gale_crop_5m.tif"
 #In degrees
 SAFE_SLOPE_LIMIT = 20
 
