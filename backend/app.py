@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import config
 from pipeline import get_route
-
+#Claude came upw with the two classes Coordinate and RouteRequest to help with the structure of this file
 app = FastAPI()
 
 allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?", # include any local server
@@ -30,6 +30,8 @@ class RouteRequest(BaseModel):
 
 @app.post("/api/route")
 def calculate_route(data: RouteRequest):
+    print("START:", data.start.lat, data.start.lon, flush=True)
+    print("END:", data.end.lat, data.end.lon, flush=True)
 
     if data.region_id != "gale":
         raise HTTPException(
