@@ -1,2 +1,6 @@
 html, body { margin: 0; height: 100%; font-family: sans-serif; }
 #map { width: 100%; height: 100%; }
+#panel { position: absolute; top: 10px; left: 10px; z-index: 10; max-width: 260px;
+    background: rgba(20,20,20,0.85); color: #fff; padding: 10px; border-radius: 6px; font-size: 14px; }
+#panel button { margin: 0 4px 6px 0; }
+#stats { margin-top: 6px; white-space: pre-line; }

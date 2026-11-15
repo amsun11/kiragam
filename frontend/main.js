@@ -36,7 +36,6 @@ function applyRustTint(layer, brightness = 1.0, contrast = 1.0) {
   layer.contrast = contrast;
 }
 
-// TODO: Imagery layers (MarsTrek WMTS)
 // Layer 1: Whole planet topographical layer
 const marsProvider = new Cesium.WebMapTileServiceImageryProvider({
   url: "https://trek.nasa.gov/tiles/Mars/EQ/Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp_lzw/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
@@ -99,3 +98,150 @@ const tintLayer = viewer.imageryLayers.addImageryProvider(
 tintLayer.alpha = 0.55;
 
 // TODO: Click handling, route drawing, panels, etc.
+// Connect to buttons
+const cfg = window.APP_CONFIG;
+const deg = Cesium.Math.toDegrees;
+const START_VIEW = Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS);
+const statusEl = document.getElementById("status");
+const statsEl = document.getElementById("stats");
+const findBtn = document.getElementById("findBtn");
+const setStatus = (msg) => { statusEl.textContent = msg; };
+
+/* 
+    start: starting coordinates, connects to backend
+    end: destination coordinates, connects to backend
+    startMarker: green pin drawn on globe
+    endMarker: red pin drawn on globe
+    routeEntity: route line drawn on globe
+*/
+let start = null, end = null, startMarker = null, endMarker = null, routeEntity = null;
+// Region outline - clickable area
+const r = startRegion;
+viewer.entities.add({
+  polyline: {
+    positions: Cesium.Cartesian3.fromDegreesArray([
+      deg(r.west), deg(r.south), deg(r.east), deg(r.south),
+      deg(r.east), deg(r.north), deg(r.west), deg(r.north),
+      deg(r.west), deg(r.south)
+    ], MARS),
+    width: 2,
+    material: Cesium.Color.WHITE
+  }
+});
+
+function inRegion(point) {   // point = { lon, lat } in degrees
+  return Cesium.Rectangle.contains(
+    startRegion,
+    Cesium.Cartographic.fromDegrees(point.lon, point.lat)
+  );
+}
+
+// Markers and clicks
+function addMarker(pt, color) {
+    return viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(pt.lon, pt.lat, 0, MARS),
+        point: { pixelSize: 12, color, outlineColor: Cesium.Color.WHITE, outlineWidth: 2,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY 
+        }
+    });
+}
+
+function clearAll() {
+  [startMarker, endMarker, routeEntity].forEach((e) => e && viewer.entities.remove(e));
+  start = end = startMarker = endMarker = routeEntity = null;
+  statsEl.innerText = "";
+  findBtn.disabled = true;
+  setStatus("Click inside the white box to set a start point.");
+}
+
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction((click) => {
+  const cart = viewer.camera.pickEllipsoid(click.position, MARS);
+  if (!cart) return;  // clicked empty space
+  const c = Cesium.Cartographic.fromCartesian(cart, MARS);
+  if (!Cesium.Rectangle.contains(startRegion, c)) {
+    setStatus("Routing only works inside the white box.");
+    return;
+  }
+  const p = { lon: deg(c.longitude), lat: deg(c.latitude) };
+  if (start && end) clearAll();   // third click starts over
+  if (!start) {
+    start = p; startMarker = addMarker(p, Cesium.Color.LIME);
+    setStatus("Now click an end point.");
+  } else {
+    end = p; endMarker = addMarker(p, Cesium.Color.RED);
+    findBtn.disabled = false;
+    setStatus("Press Find route.");
+  }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+// Route request - remove at backend integration or keep as mock backup
+// Linear interpolation, draws a straight line between 2 clicked markers
+function fakePath(a, b, n) {
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    return { lon: a.lon + (b.lon - a.lon) * t, lat: a.lat + (b.lat - a.lat) * t, height_m: 0 };
+  });
+}
+
+async function requestRoute() {
+  if (cfg.USE_MOCK) {
+    const res = await fetch("../mock/route-response.json", { signal: AbortSignal.timeout(10000) });
+    const data = await res.json();
+    data.path = fakePath(start, end, 40);
+    return data;
+  }
+  const res = await fetch(cfg.BACKEND_URL + "/api/route", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ region_id: "gale", start, end, max_slope_deg: 25 }),
+    signal: AbortSignal.timeout(10000)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Route request failed");
+  return data;
+}
+
+// Draw route and stats
+function drawRoute(data) {
+  if (routeEntity) viewer.entities.remove(routeEntity);
+  // fixed 50 m height: the globe has no terrain yet, so real heights would sit underground
+  const flat = data.path.flatMap((pt) => [pt.lon, pt.lat, 50]);
+  routeEntity = viewer.entities.add({
+    // draw cyan line as route
+    polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(flat, MARS),
+                width: 4, material: Cesium.Color.CYAN }
+  });
+  // moves camera through route
+  viewer.flyTo(routeEntity, { duration: 1.5 });
+}
+
+// read data from route given from backend and display stats
+function showStats(data) {
+  const s = data.stats;
+  statsEl.innerText = [
+    `Distance: ${(s.distance_m / 1000).toFixed(1)} km`,
+    `Max slope: ${s.max_slope_deg.toFixed(1)}°`,
+    `Mean slope: ${s.mean_slope_deg.toFixed(1)}°`,
+    `Est. time: ${s.est_time_hours.toFixed(0)} h`,
+    data.meta && data.meta.mock ? "(demo data)" : ""
+  ].join("\n");
+}
+
+// Buttons
+findBtn.addEventListener("click", async () => {
+  findBtn.disabled = true;
+  setStatus("Finding route…");
+  try {
+    const data = await requestRoute();
+    drawRoute(data);
+    showStats(data);
+    setStatus("Route found.");
+  } catch (err) {
+    setStatus("Could not get a route: " + err.message);
+  } finally {
+    findBtn.disabled = false;
+  }
+});
+document.getElementById("clearBtn").onclick = clearAll;
+document.getElementById("resetBtn").onclick = () => viewer.camera.flyTo({ destination: START_VIEW });
