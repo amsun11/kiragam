@@ -23,11 +23,11 @@ viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#8a4b2d"); // ru
 
 // Gale Crater bounding box (slightly padded around your region so mosaics don't clip), reassess when backend integrates
 const galeBounds = Cesium.Rectangle.fromDegrees(136.5, -5.8, 138.5, -3.5);
-const startRegion = Cesium.Rectangle.fromDegrees(137.124, -5.099, 137.681, -4.130);
+const startRegion = Cesium.Rectangle.fromDegrees(137.3436, -4.8249, 137.5122, -4.5551);
 
 // Set start view to Gale Crater
 viewer.camera.setView({
-  destination: Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS)
+  destination: Cesium.Cartesian3.fromDegrees(137.428, -4.690, 35000, MARS)
 });
 
 // Helper to keep a consistent rusty tint across all imagery layers
@@ -109,7 +109,7 @@ const START_VIEW = Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS);
 const statusEl = document.getElementById("status");
 const statsEl = document.getElementById("stats");
 const findBtn = document.getElementById("findBtn");
-const DEMO = { start: { lon: 137.44, lat: -4.59 }, end: { lon: 137.40, lat: -4.70 } };
+
 const setStatus = (msg, isError = false) => {
   statusEl.textContent = msg;
   statusEl.classList.toggle("error", isError);
@@ -188,17 +188,6 @@ function clearAll() {
   setStatus("Click inside the white box to set a start point.");
 }
 
-// Demo - uses pre-set points to show
-function placePoints(a, b) {
-  clearAll();
-  if (!inRegion(a) || !inRegion(b)) { setStatus("Demo points are outside the region."); return; }
-  start = a; startMarker = addMarker(a, Cesium.Color.LIME);
-  end = b;   endMarker = addMarker(b, Cesium.Color.RED);
-  findBtn.disabled = false;
-  setStatus("Press Find route.");
-}
-document.getElementById("demoBtn").onclick = () => placePoints(DEMO.start, DEMO.end);
-
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 handler.setInputAction((click) => {
   const cart = viewer.camera.pickEllipsoid(click.position, MARS);
@@ -230,7 +219,7 @@ function fakePath(a, b, n) {
 }
 
 async function requestRoute() {
-  const opts = { signal: AbortSignal.timeout(60000) };
+  const opts = { signal: AbortSignal.timeout(300000) };
   // if mock data
   const res = cfg.USE_MOCK
     ? await fetch("../mock/" + (cfg.MOCK_FILE || "route-response.json"), opts)
