@@ -8,3 +8,6 @@ SAFE_SLOPE_LIMIT = 20
 #value marking cells with no data
 DEM_NO_DATA_VAL = -32767
 SLOPE_NO_DATA_VAL = -9999
+
+#Radius measurement in meters
+MARS_RADIUS_M = 3396190.0
