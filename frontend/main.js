@@ -102,6 +102,8 @@ tintLayer.alpha = 0.55;
 // TODO: Click handling, route drawing, panels, etc.
 // Connect to buttons
 const cfg = window.APP_CONFIG;
+// wake up server if using backend data
+if (!cfg.USE_MOCK) fetch(cfg.BACKEND_URL + "/health").catch(() => {});
 const deg = Cesium.Math.toDegrees;
 const START_VIEW = Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS);
 const statusEl = document.getElementById("status");
@@ -228,7 +230,7 @@ function fakePath(a, b, n) {
 }
 
 async function requestRoute() {
-  const opts = { signal: AbortSignal.timeout(10000) };
+  const opts = { signal: AbortSignal.timeout(60000) };
   // if mock data
   const res = cfg.USE_MOCK
     ? await fetch("../mock/" + (cfg.MOCK_FILE || "route-response.json"), opts)
