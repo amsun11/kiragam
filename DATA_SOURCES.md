@@ -5,6 +5,7 @@
 - **Layer 1:** MGS MOLA and Mars Express HRSC, Color Hillshade Blend
 - **Layer 2:** MRO HiRISE, Curiosity Roving Site Mosaic
 - **Layer 3:** MRO CTX, Curiosity Roving Site Mosaic
+  
 **Usage:** This data is used to layer the visual texture and terrain of whole planet of Mars (layer 1) and the region around Gale Crater (Layers 2 and 3).
 
 ## Original Dataset
