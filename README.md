@@ -5,6 +5,7 @@ We help Mars mission planners and researchers choose safer surface routes by tur
 Built for NASA Space Apps Challenge 2026 — Interplanetary Survival Guide: Martian Map.
 
 **Demo slides:** https://docs.google.com/presentation/d/1JV9T2ES3mUlwTVVHeVxYIgbjfse0SeeFbjDy3IfIjSQ/edit?usp=sharing 
+
 **Live demo (if deployed):** https://kiragam-frontend.onrender.com/
 
 ## What it does
