@@ -1,10 +1,10 @@
 # Kiragam - 3D Mars Mapping Visualization
 
-We help Mars mission planners and researchers choose safer surface routes by turning real NASA elevation data into a 3D, risk-scored map of the paths between locations.
+We help Mars mission planners and researchers choose safer surface routes by turning real NASA elevation data into a multidimensional, interactive map of the paths between locations.
 
 Built for NASA Space Apps Challenge 2026 — Interplanetary Survival Guide: Martian Map.
 
-**Demo video:** [link]
+**Demo slides:** [https://docs.google.com/presentation/d/1JV9T2ES3mUlwTVVHeVxYIgbjfse0SeeFbjDy3IfIjSQ/edit?usp=sharing] 
 **Live demo (if deployed):** [link]
 
 ![Screenshot](docs/screenshot.png)
