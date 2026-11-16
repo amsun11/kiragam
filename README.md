@@ -22,12 +22,16 @@ Built for NASA Space Apps Challenge 2026 — Interplanetary Survival Guide: Mart
 
 ## How it works
 
-1. **Display:** [CesiumJS / Plotly] shows the Mars globe or terrain with NASA Mars Trek
-   imagery layers. Imagery is for display only.
-2. **Routing:** a Python backend loads a cropped elevation grid (DEM), computes slope,
-   builds a cost grid, and finds the least-cost path between the chosen points.
-3. **Risk:** [describe how the score is built from slope, roughness, terrain type,
-   and the storm setting].
+1. **Display (frontend):** CesiumJS draws a Mars globe (Mars ellipsoid, radius 3,396,190 m) with NASA Mars Trek WMTS imagery. Imagery is for display only. Routing never reads it.
+2. **Elevation prep (done once, offline):** the USGS Gale DEM is cropped, resampled to 5 m, and converted to a slope grid in degrees (see [Data](#data)).
+3. **Cost grid (`backend/cost.py`):** each 5 m cell gets a cost of `BASE_COST + SLOPE_PENALTY * slope`. Cells are **blocked** if their slope is above `SAFE_SLOPE_LIMIT` or if the slope is unknown (this includes the one-cell border of the crop).
+4. **Routing (`backend/route.py`):** A* search over the cost grid with 8-direction movement.
+   - Step cost = step length (5 m straight, about 7.07 m diagonal) times the average cost of the two cells.
+   - The heuristic is octile distance times the cheapest cost in the grid, so it never overestimates.
+   - Diagonal moves are not allowed to cut between two blocked cells.
+5. **Coordinates (`backend/coords.py`, `backend/grid_utils.py`):** the API takes longitude/latitude, converts to the DEM's projected meters (ESRI:103885, Mars 2000 Equidistant Cylindrical, sphere), then to grid cells, and converts the route back to longitude/latitude.
+6. **API (`backend/app.py`):** FastAPI exposes `POST /api/route`. The grids and cost array are loaded once and reused for every request (`backend/pipeline.py`).
+
 
 
 
