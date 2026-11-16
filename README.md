@@ -4,21 +4,15 @@ We help Mars mission planners and researchers choose safer surface routes by tur
 
 Built for NASA Space Apps Challenge 2026 — Interplanetary Survival Guide: Martian Map.
 
-**Demo slides:** [https://docs.google.com/presentation/d/1JV9T2ES3mUlwTVVHeVxYIgbjfse0SeeFbjDy3IfIjSQ/edit?usp=sharing] 
-**Live demo (if deployed):** [link]
-
-![Screenshot](docs/screenshot.png)
+**Demo slides:** https://docs.google.com/presentation/d/1JV9T2ES3mUlwTVVHeVxYIgbjfse0SeeFbjDy3IfIjSQ/edit?usp=sharing 
+**Live demo (if deployed):** https://kiragam-frontend.onrender.com/
 
 ## What it does
 
-- Shows an interactive 3D Mars globe using NASA imagery.
+- Shows an interactive 3D Mars globe using NASA imagery layers.
 - Lets you pick a start and end point in the Gale Crater / Mount Sharp region.
 - Computes a least-cost route that avoids steep slopes, using real elevation data.
 - Reports route stats: distance, max slope, mean slope, estimated travel time.
-- Shows a scenario-based risk assessment (terrain risk plus an adjustable
-  dust storm severity setting) with a Go / Shorten / Wait advisory.
-- [Optional: overlays Curiosity's real traverse for comparison.]
-- [Optional: fly-through of the planned route.]
 
 ## How it works
 
@@ -31,9 +25,6 @@ Built for NASA Space Apps Challenge 2026 — Interplanetary Survival Guide: Mart
    - Diagonal moves are not allowed to cut between two blocked cells.
 5. **Coordinates (`backend/coords.py`, `backend/grid_utils.py`):** the API takes longitude/latitude, converts to the DEM's projected meters (ESRI:103885, Mars 2000 Equidistant Cylindrical, sphere), then to grid cells, and converts the route back to longitude/latitude.
 6. **API (`backend/app.py`):** FastAPI exposes `POST /api/route`. The grids and cost array are loaded once and reused for every request (`backend/pipeline.py`).
-
-
-
 
 ## Run it locally
  
@@ -74,16 +65,12 @@ In a second terminal:
  
 ```bash
 cd frontend
-python -m http.server 5173
+python -m http.server [your local host frontend server]
 ```
  
-Open **http://localhost:5173**. Use exactly this address, because the backend's CORS setting allows that origin.
+Open your local backend server **http://localhost:XXXX**. Use exactly this address, because the backend's CORS setting allows that origin.
  
-In `frontend/config.js`, set `BACKEND_URL` to `http://localhost:8000` and `USE_MOCK` to `false`.
- 
-### Mock mode (no backend needed)
- 
-[Partner: explain how to switch `USE_MOCK` on and which file in `mock/` it loads.]
+In `frontend/config.js`, set `BACKEND_URL` to `http://localhost:XXXX` and `USE_MOCK` to `false`.
  
 ## API
  
@@ -118,23 +105,19 @@ Errors return HTTP 400 with a `detail` message, for example when a point is outs
  
 `max_slope_deg` is accepted in the request body but is **not used yet**. The slope limit comes from `backend/config.py`.
  
-See `docs/api-contract.md` for the full contract.
 ## Data
 
 | Purpose | Source | Notes |
 |---|---|---|
-| Globe imagery | NASA Mars Trek WMTS — [layer names] | Display only |
-| Elevation (routing) | USGS Astrogeology — [product name and resolution] | Cropped to [lat/lon box] |
+| Globe imagery | NASA Mars Trek WMTS — MGS MOLA and Mars Express HRSC, Color Hillshade Blend, MRO HiRISE, Curiosity Roving Site Mosaic, MRO CTX, Curiosity Roving Site Mosaic | Display only | Elevation (routing) | USGS Astrogeology — [product name and resolution] | Cropped to [lat/lon box] |
 
 See `data/README.md` for how to download and recreate the cropped file.
 
 ## Limitations (please read)
 
 - Routing only works inside the [Gale Crater] region, where we have elevation data.
-- The storm advisory is **scenario-based**, not a forecast. Storm levels are
-  chosen by the user, and thresholds are our own assumptions.
-- Travel time uses a simplified speed assumption of [value].
-- [Add anything else honest: coarse data resolution, no wheel-terrain interaction, etc.]
+- Travel time uses a simplified speed assumption of [0.417 meters/second].
+- Increased distance between points may take longer time to calculate route.
 
 ## Team
 
@@ -143,7 +126,7 @@ See `data/README.md` for how to download and recreate the cropped file.
 
 ## Credits and acknowledgments
 
-- Imagery and layers: NASA / JPL-Caltech, NASA Mars Trek
+- Imagery and layers: NASA / JPL, NASA Mars Trek
 - Elevation data: [NASA MOLA, ESA/DLR HRSC, USGS Astrogeology Science Center — confirm exact credit lines]
 - [Curiosity images, if used: NASA/JPL-Caltech/MSSS]
 - Libraries: [CesiumJS, FastAPI, rasterio, scikit-image, etc.]
