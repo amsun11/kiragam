@@ -58,6 +58,7 @@ uvicorn app:app --reload --port 8000
 ```
  
 - Interactive API docs: http://localhost:8000/docs
+    - Make sure to use your own, local host number.
 - The first request after startup is the slowest, because it loads the grids and builds the cost array.
 ### 3. Start the frontend
  
@@ -65,10 +66,10 @@ In a second terminal:
  
 ```bash
 cd frontend
-python -m http.server 5173
+python -m http.server [insert your local host frontend server number]
 ```
  
-Open **http://localhost:5173**. Use exactly this address, because the backend's CORS setting only allows that origin. (If you use a different port, add it to `allow_origins` in `backend/app.py`.)
+Open **http://localhost:XXXX**. Use exactly this address, because the backend's CORS setting only allows that origin. (If you use a different port, add it to `allow_origins` in `backend/app.py`.)
  
 In `frontend/config.js`, set `BACKEND_URL` to `http://localhost:8000` and `USE_MOCK` to `false`.
  
