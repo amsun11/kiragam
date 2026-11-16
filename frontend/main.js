@@ -24,6 +24,7 @@ viewer.scene.fog.enabled = false;                 // distance haze (optional)
 viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#8a4b2d"); // rusty color where there's no imagery yet
 
 // Gale Crater bounding box (slightly padded around your region so mosaics don't clip), reassess when backend integrates
+// Used Claude to convert boundaries from meters to degrees and recommend padding
 const galeBounds = Cesium.Rectangle.fromDegrees(136.5, -5.8, 138.5, -3.5);
 const startRegion = Cesium.Rectangle.fromDegrees(137.3436, -4.8249, 137.5122, -4.5551);
 
@@ -40,6 +41,7 @@ function applyRustTint(layer, brightness = 1.0, contrast = 1.0) {
   layer.contrast = contrast;
 }
 
+// Used Claude AI and tile API documentation to find imagery provider layout
 // Layer 1: Whole planet topographical layer
 const marsProvider = new Cesium.WebMapTileServiceImageryProvider({
   url: "https://trek.nasa.gov/tiles/Mars/EQ/Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp_lzw/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
@@ -104,7 +106,7 @@ tintLayer.alpha = 0.55;
 // TODO: Click handling, route drawing, panels, etc.
 // Connect to buttons
 const cfg = window.APP_CONFIG;
-// wake up server if using backend data
+// wake up server if using backend data, used Claude to find this command
 if (!cfg.USE_MOCK) fetch(cfg.BACKEND_URL + "/health").catch(() => {});
 const deg = Cesium.Math.toDegrees;
 const START_VIEW = Cesium.Cartesian3.fromDegrees(137.40, -4.61, 100000, MARS);
@@ -125,6 +127,7 @@ function clearRoute() {
   statsEl.innerText = "";
 }
 
+// used Claude AI to recommend error handling structure and understandable messages
 function validateRoute(data) {
   const ok = data && Array.isArray(data.path) && data.path.length >= 2 &&
     data.path.every((p) => Number.isFinite(p.lon) && Number.isFinite(p.lat));
@@ -190,6 +193,7 @@ function clearAll() {
   setStatus("Click inside the white box to set a start point.");
 }
 
+// Used Claude to structure this screen space event handler section
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 handler.setInputAction((click) => {
   const cart = viewer.camera.pickEllipsoid(click.position, MARS);
@@ -221,6 +225,7 @@ function fakePath(a, b, n) {
 }
 
 async function requestRoute() {
+  // 5 minute timeout
   const opts = { signal: AbortSignal.timeout(300000) };
   // if mock data
   const res = cfg.USE_MOCK
@@ -245,7 +250,7 @@ async function requestRoute() {
   return data;
 }
 
-// Draw route and stats
+// Draw route and stats, used CLaude AI to assist generation
 function drawRoute(data) {
   if (routeEntity) viewer.entities.remove(routeEntity);
   // fixed 50 m height: the globe has no terrain yet, so real heights would sit underground
@@ -266,6 +271,7 @@ function drawRoute(data) {
 function showStats(data) {
   // doesn't crash sim if there is no stats sent from backend
   const s = data.stats || {};
+  // Used Claude to format
   statsEl.innerText = [
     `Distance: ${fmt(s.distance_m / 1000)} km`,
     `Max slope: ${fmt(s.max_slope_deg)}°`,
@@ -278,6 +284,7 @@ function showStats(data) {
 // Create credits/attributions to be displayed
 const creditsEl = document.getElementById("credits");
 
+// Used AI and API documentation to find these functions
 function renderCredits(items) {
  creditsEl.replaceChildren();
   if (!Array.isArray(items)) { creditsEl.textContent = items || ""; return; }   // old string format still works
