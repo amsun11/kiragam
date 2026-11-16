@@ -29,35 +29,92 @@ Built for NASA Space Apps Challenge 2026 — Interplanetary Survival Guide: Mart
 3. **Risk:** [describe how the score is built from slope, roughness, terrain type,
    and the storm setting].
 
-The frontend and backend communicate through the API described in
-`docs/api-contract.md`.
 
-## Run it
 
+## Run it locally
+ 
 ### Prerequisites
-- Python [version], [any other tools]
-- A modern version of Chrome
-
-### Backend
+ 
+- [Miniforge or another conda distribution](https://github.com/conda-forge/miniforge)
+- Python 3.12 (installed by the environment file below)
+- A modern Chrome or Edge with **WebGL enabled** (needed for the globe)
+### 1. Set up the environment (once)
+ 
+```bash
+conda env create -f environment.yml
+conda activate gale
+```
+ 
+No conda? You can use pip instead, but `rasterio` needs GDAL and can fail to build on very new Python versions. We tested with Python 3.12.
+ 
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+ 
+### 2. Start the backend
+ 
+Run from the `backend` folder (the data paths are relative to it):
+ 
 ```bash
 cd backend
-python -m venv .venv
-# Windows: .venv\Scripts\activate    Mac/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn app:app --reload --port 8000
 ```
-API docs appear at http://localhost:8000/docs
-
-### Frontend
+ 
+- Interactive API docs: http://localhost:8000/docs
+- The first request after startup is the slowest, because it loads the grids and builds the cost array.
+### 3. Start the frontend
+ 
+In a second terminal:
+ 
 ```bash
 cd frontend
-# [e.g. python -m http.server 5500]
+python -m http.server 5173
 ```
-Open http://localhost:5500
-
+ 
+Open **http://localhost:5173**. Use exactly this address, because the backend's CORS setting allows that origin.
+ 
+In `frontend/config.js`, set `BACKEND_URL` to `http://localhost:8000` and `USE_MOCK` to `false`.
+ 
 ### Mock mode (no backend needed)
-[Explain how to switch the frontend to the hardcoded response in `mock/route-response.json`.]
-
+ 
+[Partner: explain how to switch `USE_MOCK` on and which file in `mock/` it loads.]
+ 
+## API
+ 
+`POST /api/route`
+ 
+```json
+{
+  "region_id": "gale",
+  "start": { "lon": 137.386, "lat": -4.562 },
+  "end":   { "lon": 137.492, "lat": -4.5745 }
+}
+```
+ 
+(Replace with any two points inside the routing area.)
+ 
+Response:
+ 
+```json
+{
+  "path": [ { "lon": 137.386, "lat": -4.562 }, "..." ],
+  "stats": {
+    "distance_m": 0,
+    "max_slope_deg": 0,
+    "mean_slope_deg": 0,
+    "est_time_hours": 0
+  },
+  "meta": { "mock": false }
+}
+```
+ 
+Errors return HTTP 400 with a `detail` message, for example when a point is outside the routing area, sits on blocked terrain, or no route exists.
+ 
+`max_slope_deg` is accepted in the request body but is **not used yet**. The slope limit comes from `backend/config.py`.
+ 
+See `docs/api-contract.md` for the full contract.
 ## Data
 
 | Purpose | Source | Notes |
